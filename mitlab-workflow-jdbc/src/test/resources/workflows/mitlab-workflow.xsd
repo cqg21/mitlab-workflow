@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.mitlab.org/workflow" elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:mw="http://www.mitlab.org/workflow">
+
+    <element name="workflow" type="mw:WorkflowDescriptor"></element>
+    
+    <complexType name="WorkflowDescriptor">
+    	<sequence>
+    		<element name="start-step" type="mw:StepDescriptor"
+    			minOccurs="1" maxOccurs="1">
+    		</element>
+    		<element name="step" type="mw:StepDescriptor" minOccurs="0"
+    			maxOccurs="unbounded">
+    		</element>
+    		<element name="stop-step" type="mw:StepDescriptor"
+    			minOccurs="1" maxOccurs="1">
+    		</element>
+    	</sequence>
+    	<attribute name="name" type="string"></attribute>
+    </complexType>
+
+    <complexType name="StepDescriptor">
+    	<sequence>
+    		<element name="meta" type="mw:MetaDescriptor" minOccurs="0"
+    			maxOccurs="unbounded">
+    		</element>
+    		<element name="pre-functions"
+    			type="mw:FunctionsDescriptor" minOccurs="0" maxOccurs="1">
+    		</element>
+    		<element name="actions" type="mw:ActionsDescriptor" minOccurs="0" maxOccurs="1"></element>
+    		<element name="post-functions"
+    			type="mw:FunctionsDescriptor" minOccurs="0" maxOccurs="1">
+    		</element>
+    	</sequence>
+    	<attribute name="id" type="string"></attribute>
+    	<attribute name="name" type="string"></attribute>
+    </complexType>
+
+
+    <complexType name="ActionDescriptor">
+    	<sequence>
+    		<element name="meta" type="mw:MetaDescriptor" minOccurs="0"
+    			maxOccurs="unbounded">
+    		</element>
+    		<element name="conditions" type="mw:ConditionsDescriptor" minOccurs="0" maxOccurs="1"></element>
+    		<element name="pre-functions" type="mw:FunctionsDescriptor"
+    			minOccurs="0" maxOccurs="1">
+    		</element>
+    		<element name="results" type="mw:ResultsDescriptor" minOccurs="1" maxOccurs="1"></element>
+    		<element name="post-functions"
+    			type="mw:FunctionsDescriptor" minOccurs="0" maxOccurs="1">
+    		</element>
+    	</sequence>
+    	<attribute name="id" type="string"></attribute>
+    	<attribute name="name" type="string"></attribute>
+    </complexType>
+    
+    <complexType name="MetaDescriptor">
+    	<attribute name="key" type="string"></attribute>
+    	<attribute name="value" type="string"></attribute>
+    </complexType>
+
+    <complexType name="ActionsDescriptor">
+    	<sequence>
+    		<element name="action" type="mw:ActionDescriptor" minOccurs="0" maxOccurs="unbounded"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="FunctionsDescriptor">
+    	<sequence>
+    		<element name="function" type="mw:FunctionDescriptor" minOccurs="1" maxOccurs="unbounded"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="FunctionDescriptor">
+    	<sequence>
+    		<element name="arg" type="mw:ArgDescriptor" minOccurs="1" maxOccurs="unbounded"></element>
+    	</sequence>
+    	<attribute name="type">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="spring"></enumeration>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
+
+    <complexType name="ArgDescriptor">
+    	<attribute name="name" type="string"></attribute>
+    	<attribute name="value" type="string"></attribute>
+    </complexType>
+
+    <complexType name="ConditionsDescriptor">
+    	<sequence>
+    		<element name="condition" type="mw:ConditionDescriptor"
+    			minOccurs="0" maxOccurs="unbounded">
+    		</element>
+    		<element name="conditions" type="mw:ConditionsDescriptor" minOccurs="0" maxOccurs="1"></element>
+    	</sequence>
+    	<attribute name="type">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="AND"></enumeration>
+    				<enumeration value="OR"></enumeration>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
+
+    <complexType name="ResultsDescriptor">
+    	<sequence>
+    		<element name="result" type="mw:ResultDescriptor" minOccurs="1" maxOccurs="unbounded"></element>
+    	</sequence>
+    </complexType>
+
+    <complexType name="ResultDescriptor">
+    	<sequence>
+    		<element name="meta" type="mw:MetaDescriptor" minOccurs="0"
+    			maxOccurs="unbounded">
+    		</element>
+    		<element name="conditions" type="mw:ConditionsDescriptor"
+    			minOccurs="0" maxOccurs="1">
+    		</element>
+    		<element name="pre-functions" type="mw:FunctionsDescriptor"
+    			minOccurs="0" maxOccurs="1">
+    		</element>
+    		<element name="post-functions" type="mw:FunctionsDescriptor"
+    			minOccurs="0" maxOccurs="1">
+    		</element>
+    	</sequence>
+    	<attribute name="name" type="string"></attribute>
+    	<attribute name="old-status" type="string"></attribute>
+    	<attribute name="status" type="string"></attribute>
+    	<attribute name="step" type="string"></attribute>
+    	<attribute name="user-group" type="string"></attribute>
+    	<attribute name="subflows" type="string"></attribute>
+    </complexType>
+
+    <complexType name="ConditionDescriptor">
+    	<sequence>
+    		<element name="arg" type="mw:ArgDescriptor" minOccurs="0" maxOccurs="unbounded"></element>
+    	</sequence>
+    	<attribute name="type">
+    		<simpleType>
+    			<restriction base="string">
+    				<enumeration value="spring"></enumeration>
+    			</restriction>
+    		</simpleType>
+    	</attribute>
+    </complexType>
+</schema>

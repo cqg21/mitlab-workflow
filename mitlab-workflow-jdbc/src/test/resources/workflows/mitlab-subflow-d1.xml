@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow xmlns="http://www.mitlab.org/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mitlab.org/workflow mitlab-workflow.xsd "
+	name="subflow-d1">
+	<start-step id="startStep" name="启动行政部子流程">
+		<actions>
+			<action id="startStep_act_01" name="启动">
+				<conditions type="OR">
+					<condition type="spring">
+						<arg name="bean.id" value="PermissionCondition"/>
+						<arg name="permission" value="security:index"/>
+					</condition>
+				</conditions>
+				<results>
+					<result old-status="Finish" status="running" user-group="demoUserGroup" step="secondStep"/>
+				</results>
+			</action>
+		</actions>
+	</start-step>
+	
+	<step id="secondStep" name="行政部审批">
+		<meta key="editAdvise" value="false" />
+		<meta key="editRemark" value="true" />
+		<actions>
+			<action id="secondStep_act_001" name="同意">
+				<results>
+					<result old-status="stopStep" status="running" step="stopStep" user-group="stopStep"/>
+				</results>
+			</action>
+		</actions>
+	</step>
+	
+	<stop-step id="stopStep" name="结束行政部子流程" />
+</workflow>

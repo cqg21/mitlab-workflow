@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow xmlns="http://www.mitlab.org/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mitlab.org/workflow mitlab-workflow.xsd "
+	name="workflow_demo">
+	<start-step id="startStep" name="创建DEMO申请单">
+		<actions>
+			<action id="act_startStep" name="创建">
+				<meta key="act_startStep" value="act_startStep" />
+				<conditions type="OR">
+					<condition type="spring">
+						<arg name="bean.id" value="PermissionCondition"/>
+						<arg name="permission" value="security:index"/>
+					</condition>
+				</conditions>
+				<results>
+					<result old-status="Finish" status="running" user-group="demoUserGroup" step="secondStep">
+						<pre-functions>
+							<function type="spring">
+								<arg name="bean.id" value="TestStepUserFunction" />
+							</function>
+						</pre-functions>
+					</result>
+				</results>
+			</action>
+		</actions>
+	</start-step>
+	
+	<step id="secondStep" name="研发部审批">
+		<meta key="editAdvise" value="true" />
+		<meta key="editRemark" value="true" />
+		<meta key="redoRemark" value="true"/>
+		<actions>
+			<action id="act_secondStep_001" name="同意">
+				<results>
+					<result name="会签" old-status="MoreThanOneStepUserCondition" status="running" step="secondStep" user-group="secondStep">
+						<conditions>
+							<condition type="spring">
+								<arg name="bean.id" value="MoreThanOneStepUserCondition" />
+							</condition>
+						</conditions>
+						<pre-functions>
+							<function type="spring">
+								<arg name="bean.id" value="LayoffStepUserFunction" />
+								<arg name="group" value="demoUserGroup"/>
+							</function>
+						</pre-functions>
+					</result>
+					<result name="会签结束" old-status="stopStep" status="running" step="thirdStep" user-group="thirdStep"/>
+				</results>
+			</action>
+		</actions>
+	</step>
+	
+	<step id="thirdStep" name="质量保障部审批">
+		<meta key="editAdvise" value="false" />
+		<meta key="editRemark" value="true" />
+		<actions>
+			<action id="act_thirdStep_001" name="同意">
+				<meta key="act_thirdStep_001" value="act_thirdStep_001" />
+				<results>
+					<!-- <result old-status="stopStep" status="running" step="fourStep" user-group="stopStep"/> -->
+					<result old-status="stopStep" status="running" step="fourStep" user-group="stopStep" subflows="subflow-d1,subflow-d2"/>
+				</results>
+			</action>
+			<action id="act_thirdStep_002" name="退回">
+				<meta key="act_thirdStep_001" value="act_thirdStep_001" />
+				<results>
+					<result old-status="stopStep" status="running" step="secondStep" user-group="stopStep">
+						<pre-functions>
+							<function type="spring">
+								<arg name="bean.id" value="LastStepCallerFunction"/>
+							</function>
+						</pre-functions>
+					</result>
+				</results>
+			</action>
+			<action id="act_thirdStep_003" name="终止">
+				<meta key="act_thirdStep_001" value="act_thirdStep_001" />
+				<results>
+					<result old-status="stopStep" status="running" step="stopStep" user-group="stopStep"/>
+				</results>
+			</action>
+		</actions>
+	</step>
+	
+	<step id="fourStep" name="公司管理层审批">
+		<meta key="editAdvise" value="true" />
+		<meta key="editRemark" value="true" />
+		<actions>
+			<action id="act_thirdStep_001" name="同意">
+				<conditions>
+					<condition type="spring">
+						<arg name="bean.id" value="JoinCondition"/>
+					</condition>
+				</conditions>
+				<meta key="act_thirdStep_001" value="act_thirdStep_001" />
+				<results>
+					<result old-status="stopStep" status="running" step="fiveStep" user-group="stopStep"/>
+				</results>
+			</action>
+		</actions>
+	</step>
+	
+	<step id="fiveStep" name="总裁办审批">
+		<meta key="editAdvise" value="true" />
+		<meta key="editRemark" value="true" />
+		<actions>
+			<action id="fiveStep-ACT_001" name="同意">
+				<meta key="fiveStep-ACT_001" value="act_thirdStep_001" />
+				<results>
+					<result old-status="stopStep" status="running" step="stopStep" user-group="stopStep"/>
+				</results>
+			</action>
+			<action id="fiveStep-ACT_002" name="退回">
+				<meta key="fiveStep-ACT_001" value="act_thirdStep_001" />
+				<results>
+					<result old-status="stopStep" status="running" step="fourStep" user-group="stopStep">
+						<pre-functions>
+							<function type="spring">
+								<arg name="bean.id" value="LastStepCallerFunction"/>
+							</function>
+						</pre-functions>
+					</result>
+				</results>
+			</action>
+			<action id="fiveStep-ACT_003" name="退回研发部">
+				<meta key="fiveStep-ACT_001" value="act_thirdStep_001" />
+				<results>
+					<result old-status="stopStep" status="running" step="secondStep" user-group="stopStep">
+						<pre-functions>
+							<function type="spring">
+								<arg name="bean.id" value="LastStepCallerFunction"/>
+							</function>
+						</pre-functions>
+					</result>
+				</results>
+			</action>
+		</actions>
+	</step>
+	
+	<stop-step id="stopStep" name="DEMO申请单结束" />
+</workflow>

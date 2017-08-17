@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow xmlns="http://www.mitlab.org/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mitlab.org/workflow mitlab-workflow.xsd "
+	name="requisition">
+	<start-step id="startStep" name="创建申请单">
+		<actions>
+			<action id="act_startStep" name="创建">
+				<meta key="act_startStep" value="act_startStep" />
+				<conditions type="OR">
+					<condition type="spring">
+						<arg name="bean.id" value="PermissionCondition"/>
+						<arg name="permission" value="security:index"/>
+					</condition>
+				</conditions>
+				<results>
+					<result old-status="Finish" status="running" user-group="demoUserGroup" step="secondStep">
+						<pre-functions>
+							<function type="spring">
+								<arg name="bean.id" value="TestStepUserFunction" />
+							</function>
+						</pre-functions>
+					</result>
+				</results>
+			</action>
+		</actions>
+	</start-step>
+	
+	<step id="secondStep" name="审批">
+		<meta key="editAdvise" value="false" />
+		<meta key="editRemark" value="true" />
+		<actions>
+			<action id="act_thirdStep_001" name="同意">
+				<meta key="act_thirdStep_001" value="act_thirdStep_001" />
+				<results>
+					<result old-status="stopStep" status="running" step="stopStep" user-group="stopStep"/>
+				</results>
+			</action>
+			<action id="act_thirdStep_002" name="不同意">
+				<meta key="act_thirdStep_001" value="act_thirdStep_001" />
+				<results>
+					<result old-status="stopStep" status="running" step="stopStep" user-group="stopStep">
+						<!-- <pre-functions>
+							<function type="spring">
+								<arg name="bean.id" value="LastStepCallerFunction"/>
+							</function>
+						</pre-functions> -->
+					</result>
+				</results>
+			</action>
+		</actions>
+	</step>
+	
+	<stop-step id="stopStep" name="申请单流程结束" />
+</workflow>

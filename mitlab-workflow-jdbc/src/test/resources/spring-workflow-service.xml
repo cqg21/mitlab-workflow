@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+       
+	<!-- workflow impl -->
+	<bean id="MoreThanOneStepUserCondition" class="com.mitlab.workflow.conditions.MoreThanOneStepUserCondition"/>
+    <bean id="PermissionCondition" class="com.mitlab.workflow.conditions.PermissionCondition"/>
+    <bean id="StepUserCondition" class="com.mitlab.workflow.conditions.StepUserCondition"/>
+    <bean id="LayoffStepUserFunction" class="com.mitlab.workflow.functions.LayoffStepUserFunction"/>
+    <bean id="TestStepUserFunction" class="com.mitlab.workflow.functions.TestStepUserFunction"/>
+    <bean id="LastStepCallerFunction" class="com.mitlab.workflow.functions.LastStepCallerFunction"/>
+    <bean id="KillSubflowFunction" class="com.mitlab.workflow.functions.KillSubflowFunction"></bean>
+    <bean id="JoinCondition" class="com.mitlab.workflow.conditions.JoinCondition"/>
+    <bean id="jdbcWorkflowProvider" class="com.mitlab.workflow.JdbcWorkflow">
+    	<constructor-arg>
+    		<bean class="com.mitlab.workflow.BasicUserGroupLoader"/>
+    	</constructor-arg>
+    	<constructor-arg ref="workflowDataSource"/>
+    </bean>
+</beans>
