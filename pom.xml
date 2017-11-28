@@ -25,6 +25,7 @@
 		</plugins>
 	</build>
 	<modules>
+		<module>mitlab-workflow-api</module>
 		<module>mitlab-workflow-jdbc</module>
 	</modules>
 </project>
