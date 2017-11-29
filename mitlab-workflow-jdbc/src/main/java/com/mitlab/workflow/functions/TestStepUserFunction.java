@@ -14,7 +14,7 @@ public class TestStepUserFunction implements Function {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void execute(Map<String, Object> inputs, Map<String, Object> args) {
+	public void execute(Map<String, Object> inputs, Map<String, Object> args, Map<String, Object> propertyStore) {
 		List<UserGroup> userGroupList = new ArrayList<UserGroup>();
 		String group = (String) args.get("group");
 		if (group == null) {

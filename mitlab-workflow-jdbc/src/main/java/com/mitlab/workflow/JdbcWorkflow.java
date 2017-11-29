@@ -227,19 +227,7 @@ public class JdbcWorkflow implements Workflow {
 				stmt.setLong(2, step.getId());
 				stmt.setInt(3, 0);
 				rs = stmt.executeQuery();
-				if (rs.next()) {
-					ByteArrayInputStream bins = new ByteArrayInputStream(rs.getBytes(1));
-					Hessian2Input hins = hessianFactory.get().createHessian2Input(bins);
-					hins.setCloseStreamOnClose(true);
-					hins.setSerializerFactory(new SerializerFactory());
-					try {
-						Map<String, Object> args = (Map<String, Object>) hins.readObject();
-						((JdbcStep) step).setArgs(args);
-						hins.close();
-					} catch (IOException e) {
-						throw new MitlabWorkflowException("close houts error", e);
-					}
-				}
+				loadStepArgs(rs, (JdbcStep) step);
 				WorkflowUtil.close(rs);
 			}
 			WorkflowUtil.close(stmt);
@@ -253,7 +241,23 @@ public class JdbcWorkflow implements Workflow {
 		}
 		return (List<Step>) steps;
 	}
-	
+
+	private static void loadStepArgs(ResultSet rs, JdbcStep step) throws SQLException {
+		if (rs.next()) {
+            ByteArrayInputStream bins = new ByteArrayInputStream(rs.getBytes(1));
+            Hessian2Input hins = hessianFactory.get().createHessian2Input(bins);
+            hins.setCloseStreamOnClose(true);
+            hins.setSerializerFactory(new SerializerFactory());
+            try {
+                Map<String, Object> args = (Map<String, Object>) hins.readObject();
+                step.setArgs(args);
+                hins.close();
+            } catch (IOException e) {
+                throw new MitlabWorkflowException("close houts error", e);
+            }
+        }
+	}
+
 	@Override
 	public List<Step> getCurrentSteps(long workflowId) {
 		Connection conn = null;
@@ -332,20 +336,7 @@ public class JdbcWorkflow implements Workflow {
 				stmt.setLong(2, step.getId());
 				stmt.setInt(3, 1);
 				rs = stmt.executeQuery();
-				if (rs.next()) {
-					ByteArrayInputStream bins = new ByteArrayInputStream(rs.getBytes(1));
-					Hessian2Input hins = hessianFactory.get().createHessian2Input(bins);
-					hins.setCloseStreamOnClose(true);
-					hins.setSerializerFactory(new SerializerFactory());
-					try {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> args = (Map<String, Object>) hins.readObject();
-						((JdbcStep) step).setArgs(args);
-						hins.close();
-					} catch (IOException e) {
-						throw new MitlabWorkflowException("close houts error", e);
-					}
-				}
+				loadStepArgs(rs, (JdbcStep) step);
 				WorkflowUtil.close(rs);
 			}
 			WorkflowUtil.close(stmt);
@@ -568,8 +559,6 @@ public class JdbcWorkflow implements Workflow {
 	private static final String GET_CURRENT_STEPS_BY_ID_SQL = "select s.id, s.step_id, s.step_name, s.user_group, s.caller, s.start_date, s.due_date, s.finish_date, s.status, s.workflow_id, s.action_id,w.workflow_name, s.prev_id from t_current_step s, t_workflow w where s.workflow_id = w.workflow_id and w.workflow_id = ? and s.step_id = ?";
 	private static final String DELETE_CURRENT_STEP_BY_ID_SQL = "delete from t_current_step where workflow_id = ? and id = ?";
 	private static final String UPDATE_WORKFLOW_STATE_SQL = "update t_workflow set workflow_status = ?, workflow_phase = ? where workflow_id = ?";
-	//create table t_step_user_group(step_id bigint not null, refer_user varchar(32) not null, refer_user_group varchar(32) not null, crt_time datetime not null default now(), workflow_id bigint not null, primary key(step_id, refer_user, refer_user_group))
-	private static final String INSERT_STEP_REFER_USER_SQL = "insert t_step_user_group(step_id, refer_user, refer_user_group, workflow_id) values(?, ?, ?, ?)";
 	// create table t_step_args(workflow_id bigint not null, step_id bigint not null, step_args longtext, args_type int not null, primary key(workflow_id,step_id,args_type)); // 0:current_step;1:history_step;
 	private static final String INSERT_STEP_ARGS_SQL = "insert into t_step_args(workflow_id,step_id,step_args, args_type) values(?, ?, ?, ?)";
 	private void doAction(Connection conn, Long workflowId, Action doingAction, Map<String, Object> inputs, StepDescriptor currentStepDescriptor, WorkflowUser caller, ActionResult actionResult) {
@@ -613,9 +602,10 @@ public class JdbcWorkflow implements Workflow {
 		args.put(Workflow.ARG_RESULT_DESCRIPTOR, nextResultDescriptor);
 		final String workflowName = this.getWorkflowNameById(conn, workflowId);
 		final StepDescriptor newStepDescriptor = WorkflowResolver.getInstance().getStepDecriptor(workflowName, nextResultDescriptor.getStep());
-		executeFunctions(inputs, args, newStepDescriptor.getPreFunctions());
-		executeFunctions(inputs, args, doingActionDescriptor.getPreFunctions());
-		executeFunctions(inputs, args, nextResultDescriptor.getPreFunctions());
+		Map<String, Object> propertyStore = new HashMap<String, Object>();
+		executeFunctions(inputs, args, propertyStore, newStepDescriptor.getPreFunctions(),false);
+		executeFunctions(inputs, args, propertyStore, doingActionDescriptor.getPreFunctions(),false);
+		executeFunctions(inputs, args, propertyStore, nextResultDescriptor.getPreFunctions(),false);
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		final WorkflowDescriptor workflowDescriptor = WorkflowResolver.getInstance().getWorkflowDescriptor(workflowName);
@@ -668,22 +658,14 @@ public class JdbcWorkflow implements Workflow {
 			stmt.executeUpdate();
 			WorkflowUtil.close(stmt);
 			
-			saveStepArgs(conn, workflowId, inputs, historyStep.getId(), true);
+			saveStepArgs(conn, workflowId, propertyStore, historyStep.getId(), true);
 			
 			if ((Boolean) inputs.get(Workflow.INITIALIZE)) {
 				long stepId = historyStep.getId();
 				WorkflowUtil.close(rs);
 				WorkflowUtil.close(stmt);
-				stmt = conn.prepareStatement(INSERT_STEP_REFER_USER_SQL);
 				List<UserGroup> userGroupList = this.userGroupLoader.loadUsers(inputs, args, historyStep.getUserGroup());
-				for (UserGroup userGroup : userGroupList) {
-					stmt.setLong(1, stepId);
-					stmt.setString(2, userGroup.getUser());
-					stmt.setString(3, userGroup.getGroup());
-					stmt.setLong(4, workflowId);
-					stmt.executeUpdate();
-				}
-				WorkflowUtil.close(stmt);
+				saveStepReferUser(conn, workflowId, stepId, userGroupList);
 			}
 			
 			actionResult.setCurrentStepId(historyStep.getId());
@@ -721,16 +703,8 @@ public class JdbcWorkflow implements Workflow {
 				actionResult.setNewStepStepId(newStepDescriptor.getId());
 				actionResult.setNewStepStatus(nextResultDescriptor.getOldStatus());
 				
-				stmt = conn.prepareStatement(INSERT_STEP_REFER_USER_SQL);
 				List<UserGroup> userGroupList = this.userGroupLoader.loadUsers(inputs, args, nextResultDescriptor.getUserGroup());
-				for (UserGroup userGroup : userGroupList) {
-					stmt.setLong(1, stepId);
-					stmt.setString(2, userGroup.getUser());
-					stmt.setString(3, userGroup.getGroup());
-					stmt.setLong(4, workflowId);
-					stmt.executeUpdate();
-				}
-				WorkflowUtil.close(stmt);
+				saveStepReferUser(conn, workflowId, stepId, userGroupList);
 				/*最后一步，没有动作，因此删除步骤人员及输入参数日志*/
 			} else {
 				stmt = conn.prepareStatement(INSERT_CURRENT_STEP_SQL);
@@ -763,16 +737,8 @@ public class JdbcWorkflow implements Workflow {
 				long stepId = rs.getLong(1);
 				WorkflowUtil.close(rs);
 				WorkflowUtil.close(stmt);
-				stmt = conn.prepareStatement(INSERT_STEP_REFER_USER_SQL);
 				List<UserGroup> userGroupList = this.userGroupLoader.loadUsers(inputs, args, nextResultDescriptor.getUserGroup());
-				for (UserGroup userGroup : userGroupList) {
-					stmt.setLong(1, stepId);
-					stmt.setString(2, userGroup.getUser());
-					stmt.setString(3, userGroup.getGroup());
-					stmt.setLong(4, workflowId);
-					stmt.executeUpdate();
-				}
-				WorkflowUtil.close(stmt);
+				saveStepReferUser(conn, workflowId, stepId, userGroupList);
 				actionResult.setNewStepId(stepId);
 				actionResult.setNewStepStepId(newStepDescriptor.getId());
 				actionResult.setNewStepStatus(nextResultDescriptor.getStatus());
@@ -799,14 +765,28 @@ public class JdbcWorkflow implements Workflow {
 			WorkflowUtil.close(rs);
 			WorkflowUtil.close(stmt);
 		}
-		executeFunctions(inputs, args, nextResultDescriptor.getPostFunctions());
-		executeFunctions(inputs, args, doingActionDescriptor.getPostFunctions());
+		propertyStore.clear();
+		executeFunctions(inputs, args, propertyStore, nextResultDescriptor.getPostFunctions(), true);
+		executeFunctions(inputs, args, propertyStore, doingActionDescriptor.getPostFunctions(), true);
 		if (currentStepDescriptor != null) {
-			executeFunctions(inputs, args, currentStepDescriptor.getPostFunctions());
+			executeFunctions(inputs, args, propertyStore, currentStepDescriptor.getPostFunctions(), true);
 		}
 		if (newStepIsStopStep) {
-			executeFunctions(inputs, args, newStepDescriptor.getPostFunctions());
+			executeFunctions(inputs, args, propertyStore, newStepDescriptor.getPostFunctions(), true);
 		}
+	}
+
+	private static final String INSERT_STEP_REFER_USER_SQL = "insert t_step_user_group(step_id, refer_user, refer_user_group, workflow_id) values(?, ?, ?, ?)";
+	private void saveStepReferUser(Connection conn, Long workflowId, long stepId, List<UserGroup> userGroupList) throws SQLException {
+		PreparedStatement stmt = conn.prepareStatement(INSERT_STEP_REFER_USER_SQL);
+		for (UserGroup userGroup : userGroupList) {
+            stmt.setLong(1, stepId);
+            stmt.setString(2, userGroup.getUser());
+            stmt.setString(3, userGroup.getGroup());
+            stmt.setLong(4, workflowId);
+            stmt.executeUpdate();
+        }
+		WorkflowUtil.close(stmt);
 	}
 
 	private void saveStepArgs(Connection conn, Long workflowId, Map<String, Object> inputs, Long stepId, boolean isHistoryStep) throws SQLException {
@@ -833,7 +813,7 @@ public class JdbcWorkflow implements Workflow {
 		}
 	}
 
-	private void executeFunctions(Map<String, Object> inputs, Map<String, Object> args, FunctionsDescriptor functionsDescriptor) {
+	private void executeFunctions(Map<String, Object> inputs, Map<String, Object> args, Map<String, Object> propertyStore,  FunctionsDescriptor functionsDescriptor, boolean postFunction) {
 		if (functionsDescriptor != null) {
 			List<FunctionDescriptor> functionDescriptorList = functionsDescriptor.getFunction();
 			for (FunctionDescriptor functionDescriptor : functionDescriptorList) {
@@ -844,9 +824,12 @@ public class JdbcWorkflow implements Workflow {
 				if ("spring".equals(functionDescriptor.getType())) {
 					Function function = WorkflowResolver.getInstance().getFunction((String) args.get("bean.id"));
 					if (function == null) {
-						throw new MitlabWorkflowException("未找到处理函数。");
+						throw new MitlabWorkflowException("未找到处理函数{spring:\"" + args.get("bean.id") + "\"}。");
 					}
-					function.execute(inputs, args);
+					function.execute(inputs, args, propertyStore);
+					if (postFunction && !propertyStore.isEmpty()) {
+						throw new MitlabWorkflowException("后处理函数{spring:\"" + args.get("bean.id") + "\"}不支持propertyStore的存储。");
+					}
 				} else {
 					throw new MitlabWorkflowException("Unsupported Function type:" + functionDescriptor.getType());
 				}
@@ -899,11 +882,6 @@ public class JdbcWorkflow implements Workflow {
 			WorkflowUtil.close(conn);
 		}
 		return actionResult;
-	}
-
-	@Override
-	public ActionResult doAction(long workflowId, String actionId, Map<String, Object> inputs, WorkflowUser caller) {
-		return this.doAction(workflowId, null, actionId, inputs, caller);
 	}
 
 	private static final String GET_TODO_WORKFLOWS_SQL = "select w.workflow_id from t_workflow w, t_current_step s, t_step_user_group ug where w.workflow_id = s.workflow_id and ug.step_id = s.id  AND ug.refer_user_group = s.user_group";
@@ -974,16 +952,6 @@ public class JdbcWorkflow implements Workflow {
 		return editable(workflowId, stepId, inputs, considerAction, caller, true);
 	}
 
-	@Override
-	public Map<String, Boolean> editable(long workflowId, Map<String, Object> inputs, WorkflowUser caller) {
-		return this.editable(workflowId, inputs, true, caller);
-	}
-
-	@Override
-	public Map<String, Boolean> editable(long workflowId, Map<String, Object> inputs, boolean considerAction, WorkflowUser caller) {
-		return editable(workflowId, null, inputs, considerAction, caller, false);
-	}
-
 	private Map<String, Boolean> editable(long workflowId, Long stepId, Map<String, Object> inputs, boolean considerAction, WorkflowUser caller, boolean withSubflow) {
 		Map<String, Boolean> editables = new HashMap<String, Boolean>();
 		Connection conn = null;
@@ -1019,50 +987,6 @@ public class JdbcWorkflow implements Workflow {
 			WorkflowUtil.close(conn);
 		}
 		return editables;
-	}
-	
-	@Override
-	public String horizontalFlowGraph(Long workflowId) {
-		String graph;
-		Connection conn = null;
-		try {
-			conn = newConnection();
-			List<Step> activatedSteps;
-			WorkflowResolver workflowResolver = WorkflowResolver.getInstance();
-			if (FlowStatus.COMPLETED == FlowStatus.value(getWorkflowStatusById(conn, workflowId))) {
-				activatedSteps = new ArrayList<Step>();
-			} else {
-				activatedSteps = getCurrentStepsWithSubflow(conn, workflowId, null);
-			}
-			graph = workflowResolver.horizontalFlowGraph(getWorkflowNameById(conn, workflowId), activatedSteps);
-		} catch (MitlabWorkflowException e) {
-			throw e;
-		} finally {
-			WorkflowUtil.close(conn);
-		}
-		return graph;
-	}
-
-	@Override
-	public String verticalFlowGraph(Long workflowId) {
-		String graph;
-		Connection conn = null;
-		try {
-			conn = newConnection();
-			List<Step> activatedSteps;
-			WorkflowResolver workflowResolver = WorkflowResolver.getInstance();
-			if (FlowStatus.COMPLETED == FlowStatus.value(getWorkflowStatusById(conn, workflowId))) {
-				activatedSteps = new ArrayList<Step>();
-			} else {
-				activatedSteps = getCurrentStepsWithSubflow(conn, workflowId, null);
-			}
-			graph = workflowResolver.verticalFlowGraph(getWorkflowNameById(conn, workflowId), activatedSteps);
-		} catch (MitlabWorkflowException e) {
-			throw e;
-		} finally {
-			WorkflowUtil.close(conn);
-		}
-		return graph;
 	}
 	
 	public List<Step> getCurrentStepsWithSubflow(long workflowId) {
@@ -1110,14 +1034,4 @@ public class JdbcWorkflow implements Workflow {
 		return subflowIds;
 	}
 
-	@Override
-	public String horizontalFlowGraph(String workflowName) {
-		return WorkflowResolver.getInstance().horizontalFlowGraph(workflowName);
-	}
-
-	@Override
-	public String verticalFlowGraph(String workflowName) {
-		return null;
-	}
-	
 }

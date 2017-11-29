@@ -23,7 +23,7 @@ public class LastStepCallerFunction implements Function {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void execute(Map<String, Object> inputs, Map<String, Object> args) {
+	public void execute(Map<String, Object> inputs, Map<String, Object> args, Map<String, Object> propertyStore) {
 		List<UserGroup> userGroupList = new ArrayList<UserGroup>();
 		JdbcWorkflow workflow = (JdbcWorkflow) args.get(Workflow.ARG_WORKFLOW);
 		Long workflowId = (Long) args.get(Workflow.ARG_WORKFLOW_ID);

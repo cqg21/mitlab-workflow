@@ -21,7 +21,7 @@ public class LayoffStepUserFunction implements Function {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public void execute(Map<String, Object> inputs, Map<String, Object> args) {
+	public void execute(Map<String, Object> inputs, Map<String, Object> args, Map<String, Object> propertyStore) {
 		List<UserGroup> userGroupList = new ArrayList<UserGroup>();
 		String group = (String) args.get("group");
 		Long stepId = (Long) args.get(Workflow.ARG_STEP_ID);
