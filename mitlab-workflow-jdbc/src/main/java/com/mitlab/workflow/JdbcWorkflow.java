@@ -1,45 +1,20 @@
 package com.mitlab.workflow;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.sql.DataSource;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
 import com.caucho.hessian.io.HessianFactory;
 import com.caucho.hessian.io.SerializerFactory;
-import com.mitlab.workflow.descriptor.ActionDescriptor;
-import com.mitlab.workflow.descriptor.ActionsDescriptor;
-import com.mitlab.workflow.descriptor.ArgDescriptor;
-import com.mitlab.workflow.descriptor.ConditionDescriptor;
-import com.mitlab.workflow.descriptor.ConditionsDescriptor;
-import com.mitlab.workflow.descriptor.FunctionDescriptor;
-import com.mitlab.workflow.descriptor.FunctionsDescriptor;
-import com.mitlab.workflow.descriptor.MetaDescriptor;
-import com.mitlab.workflow.descriptor.ResultDescriptor;
-import com.mitlab.workflow.descriptor.ResultsDescriptor;
-import com.mitlab.workflow.descriptor.StepDescriptor;
-import com.mitlab.workflow.descriptor.WorkflowDescriptor;
+import com.mitlab.workflow.descriptor.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.sql.*;
+import java.util.*;
+import java.util.Date;
 
 public class JdbcWorkflow implements Workflow {
 	private static final long serialVersionUID = 1L;
@@ -51,9 +26,9 @@ public class JdbcWorkflow implements Workflow {
 		protected HessianFactory initialValue() {
 			return new HessianFactory();
 		}
-		
+
 	};
-	
+
 	public JdbcWorkflow(UserGroupLoader userGroupLoader, DataSource dataSource) {
 		this.userGroupLoader = userGroupLoader;
 		this.dataSource = dataSource;
@@ -73,7 +48,7 @@ public class JdbcWorkflow implements Workflow {
 		} catch (MitlabWorkflowException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new MitlabWorkflowException("getCurrentSteps Error", e);
+			throw new MitlabWorkflowException("getAvailableActions Error", e);
 		} finally {
 			WorkflowUtil.close(conn);
 		}
@@ -227,7 +202,8 @@ public class JdbcWorkflow implements Workflow {
 				stmt.setLong(2, step.getId());
 				stmt.setInt(3, 0);
 				rs = stmt.executeQuery();
-				loadStepArgs(rs, (JdbcStep) step);
+//				current step has not done,so no args. by liuzy
+//				loadStepArgs(rs, (JdbcStep) step);
 				WorkflowUtil.close(rs);
 			}
 			WorkflowUtil.close(stmt);
@@ -473,8 +449,11 @@ public class JdbcWorkflow implements Workflow {
 		WorkflowDescriptor workflowDescriptor = WorkflowResolver.getInstance().getWorkflowDescriptor(workflowName);
 		StepDescriptor startStepDescriptor = workflowDescriptor.getStartStep();
 		List<ActionDescriptor> actionDescriptorList = startStepDescriptor.getActions().getAction();
-		if (actionDescriptorList.size() != 1) {
-			// 错误处理
+		if (actionDescriptorList.isEmpty()) {
+			throw new MitlabWorkflowException("流程[" + workflowName + "]未找到有效启动结点。");
+		}
+		if (actionDescriptorList.size() > 1) {
+			throw new MitlabWorkflowException("流程[" + workflowName + "]找到多个有效启动结点。");
 		}
 		ActionDescriptor initialAction = actionDescriptorList.get(0);
 		PreparedStatement stmt = null;
