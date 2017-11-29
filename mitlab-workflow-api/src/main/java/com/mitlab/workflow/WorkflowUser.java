@@ -3,7 +3,7 @@ package com.mitlab.workflow;
 import java.io.Serializable;
 
 public interface WorkflowUser extends Serializable {
-	public String getUsername();
+	String getUsername();
 	
-	public boolean hasAuthority(String permission);
+	boolean hasPermission(String permission);
 }

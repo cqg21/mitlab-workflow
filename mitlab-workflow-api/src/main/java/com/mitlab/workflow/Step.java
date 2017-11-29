@@ -5,35 +5,35 @@ import java.util.Date;
 import java.util.Map;
 
 public interface Step extends Serializable {
-	public Long getId();
+	Long getId();
 	
-	public Long getPrevId();
+	Long getPrevId();
 
-	public String getStepId();
+	String getStepId();
 
-	public String getActionId();
+	String getActionId();
 
-	public String getUserGroup();
+	String getUserGroup();
 
-	public String getCaller();
+	String getCaller();
 
-	public String getStepName();
+	String getStepName();
 
-	public Date getStartDate();
+	Date getStartDate();
 
-	public Date getDueDate();
+	Date getDueDate();
 
-	public Date getFinishDate();
+	Date getFinishDate();
 
-	public Long getWorkflowId();
+	Long getWorkflowId();
 
-	public String getStatus();
+	String getStatus();
 
-	public Map<String, String> getMeta();
+	Map<String, String> getMeta();
 
-	public String getWorkflowName();
+	String getWorkflowName();
 
-	public Map<String, Object> getArgs();
+	Map<String, Object> getArgs();
 	
-	public Map<String, Object> getProperties();
+	Map<String, Object> getProperties();
 }

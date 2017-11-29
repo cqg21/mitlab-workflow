@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workflow xmlns="http://www.mitlab.org/workflow" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.mitlab.org/workflow mitlab-workflow.xsd "
-	name="workflow_demo">
+	name="workflow_bak">
 	<start-step id="startStep" name="创建DEMO申请单">
 		<actions>
 			<action id="act_startStep" name="创建">

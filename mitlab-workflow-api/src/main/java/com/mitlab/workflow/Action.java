@@ -4,17 +4,17 @@ import java.io.Serializable;
 import java.util.Map;
 
 public interface Action extends Serializable {
-	public Long getStepId();
+	Long getStepId();
 	
-	public String getActionId();
+	String getActionId();
 	
-	public String getActionName();
+	String getActionName();
 	
-	public Map<String, String> getMeta();
+	Map<String, String> getMeta();
 	
-	public String getStepStepId();
+	String getStepStepId();
 	
-	public Long getWorkflowId();
+	Long getWorkflowId();
 	
-	public String getWorkflowName();
+	String getWorkflowName();
 }

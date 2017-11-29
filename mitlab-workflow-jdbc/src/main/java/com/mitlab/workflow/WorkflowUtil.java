@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
+import java.util.Set;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -14,14 +16,22 @@ import org.springframework.context.ApplicationContext;
 
 public class WorkflowUtil {
 	private static final Log logger = LogFactory.getLog(WorkflowUtil.class);
+	private static final Properties PROPS = new Properties();
+
+	public static final void setInitContextEnv(Properties props) {
+        Set<String> keys = props.stringPropertyNames();
+        for (String key : keys) {
+            PROPS.setProperty(key, props.getProperty(key));
+        }
+    }
 	
 	public static final void bindSpringConext(ApplicationContext applicationContext) throws NamingException {
-		InitialContext initContext = new InitialContext();
+		InitialContext initContext = new InitialContext(PROPS);
 		initContext.bind("__mitlab_spring_context", applicationContext);
 	}
 	
 	public static final ApplicationContext lookupSpringContext()  throws NamingException {
-		InitialContext initContext = new InitialContext();
+        InitialContext initContext = new InitialContext(PROPS);
 		return (ApplicationContext) initContext.lookup("__mitlab_spring_context");
 	}
 	
@@ -30,9 +40,7 @@ public class WorkflowUtil {
 			return;
 		}
 		try {
-			if (!conn.isClosed()) {
-				conn.close();
-			}
+            conn.close();
 		} catch (Throwable e) {
 			logger.error("close mitlab-workflow conn error", e);
 		}
@@ -43,9 +51,7 @@ public class WorkflowUtil {
 			return;
 		}
 		try {
-			if (!stmt.isClosed()) {
-				stmt.close();
-			}
+            stmt.close();
 		} catch (Throwable e) {
 			logger.error("close mitlab-workflow stmt error", e);
 		}
@@ -56,9 +62,7 @@ public class WorkflowUtil {
 			return;
 		}
 		try {
-			if (!rs.isClosed()) {
-				rs.close();
-			}
+            rs.close();
 		} catch (Throwable e) {
 			logger.error("close mitlab-workflow rs error", e);
 		}

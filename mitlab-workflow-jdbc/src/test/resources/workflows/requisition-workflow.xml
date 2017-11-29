@@ -18,6 +18,9 @@
 							<function type="spring">
 								<arg name="bean.id" value="TestStepUserFunction" />
 							</function>
+                            <function type="spring">
+                                <arg name="bean.id" value="SaveArgumentsPreFunction"/>
+                            </function>
 						</pre-functions>
 					</result>
 				</results>
@@ -31,6 +34,11 @@
 		<actions>
 			<action id="act_thirdStep_001" name="同意">
 				<meta key="act_thirdStep_001" value="act_thirdStep_001" />
+                <pre-functions>
+                    <function type="spring">
+                        <arg name="bean.id" value="SaveArgumentsPreFunction"/>
+                    </function>
+                </pre-functions>
 				<results>
 					<result old-status="stopStep" status="running" step="stopStep" user-group="stopStep"/>
 				</results>

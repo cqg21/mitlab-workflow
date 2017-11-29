@@ -26,7 +26,7 @@ public class KillSubflowFunction implements Function {
 	private static final String INSERT_HISTORY_STEP_SQL = "insert t_history_step(id, step_id, step_name, user_group, caller, start_date, due_date, finish_date, status, workflow_id, action_id, prev_id) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	private static final String UPDATE_WORKFLOW_STATE_SQL = "update t_workflow set workflow_status = ?, workflow_phase = ? where workflow_id = ?";
 	@Override
-	public void execute(Map<String, Object> inputs, Map<String, Object> args) {
+	public void execute(Map<String, Object> inputs, Map<String, Object> args, Map<String, Object> propertyStore) {
 		final Long workflowId = (Long) args.get(Workflow.ARG_WORKFLOW_ID);
 		final DataSource ds = (DataSource) args.get(Workflow.ARG_WORKFLOW_DS);
 		final WorkflowUser caller = (WorkflowUser) args.get(Workflow.ARG_ACTION_CALLER);

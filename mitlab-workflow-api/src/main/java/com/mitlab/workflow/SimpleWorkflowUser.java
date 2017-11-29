@@ -20,7 +20,7 @@ public class SimpleWorkflowUser implements WorkflowUser {
 	}
 
 	@Override
-	public boolean hasAuthority(String permission) {
+	public boolean hasPermission(String permission) {
 		return authorities.contains(permission);
 	}
 
