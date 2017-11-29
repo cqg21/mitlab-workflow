@@ -5,5 +5,5 @@ import java.io.Serializable;
 public interface WorkflowUser extends Serializable {
 	String getUsername();
 	
-	boolean hasAuthority(String permission);
+	boolean hasPermission(String permission);
 }

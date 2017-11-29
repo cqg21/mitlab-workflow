@@ -17,8 +17,9 @@
     <bean id="LayoffStepUserFunction" class="com.mitlab.workflow.functions.LayoffStepUserFunction"/>
     <bean id="TestStepUserFunction" class="com.mitlab.workflow.functions.TestStepUserFunction"/>
     <bean id="LastStepCallerFunction" class="com.mitlab.workflow.functions.LastStepCallerFunction"/>
-    <bean id="KillSubflowFunction" class="com.mitlab.workflow.functions.KillSubflowFunction"></bean>
+    <bean id="KillSubflowFunction" class="com.mitlab.workflow.functions.KillSubflowFunction"/>
     <bean id="JoinCondition" class="com.mitlab.workflow.conditions.JoinCondition"/>
+    <bean id="SaveArgumentsPreFunction" class="com.mitlab.workflow.functions.SaveArgumentsPreFunction"/>
     <bean id="jdbcWorkflowProvider" class="com.mitlab.workflow.JdbcWorkflow">
     	<constructor-arg>
     		<bean class="com.mitlab.workflow.BasicUserGroupLoader"/>

@@ -8,6 +8,12 @@
 		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
-	
-	<jee:jndi-lookup id="workflowDataSource" jndi-name="${cfg.jndi}" />
+    <bean id="workflowDataSource" class="org.apache.commons.dbcp.BasicDataSource">
+        <property name="driverClassName" value="org.h2.Driver"/>
+        <property name="url" value="jdbc:h2:~/mitlab.workflow;MODE=MYSQL"/>
+        <property name="username" value="mitlab"/>
+        <property name="password" value="mitlab.workflow"/>
+        <property name="initialSize" value="5"/>
+        <property name="maxActive" value="30"/>
+    </bean>
 </beans>

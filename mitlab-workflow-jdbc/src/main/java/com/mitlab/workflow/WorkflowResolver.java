@@ -54,7 +54,7 @@ public class WorkflowResolver {
 			springContext = WorkflowUtil.lookupSpringContext();
 			final PathMatchingResourcePatternResolver pmrpr = new PathMatchingResourcePatternResolver(this.getClass().getClassLoader());
 			Resource[] workflowResources = pmrpr.getResources("classpath*:workflows/*.xml");
-			JAXBContext jaxbc = JAXBContext.newInstance("com.mitlab.workflow.descriptor");
+            JAXBContext jaxbc = JAXBContext.newInstance("com.mitlab.workflow.descriptor");
 			Unmarshaller unmarshaller = jaxbc.createUnmarshaller();
 			for (Resource workflowResource : workflowResources) {
 				InputStream ins = workflowResource.getInputStream();
@@ -79,7 +79,8 @@ public class WorkflowResolver {
 		} catch (JAXBException e) {
 			throw new MitlabWorkflowException("加载工作流配置文件出错", e);
 		}
-		beanFunctionMapping.putAll(springContext.getBeansOfType(Function.class));
+        System.out.println("--------->" + springContext);
+        beanFunctionMapping.putAll(springContext.getBeansOfType(Function.class));
 		beanConditionMapping.putAll(springContext.getBeansOfType(Condition.class));
 	}
 	

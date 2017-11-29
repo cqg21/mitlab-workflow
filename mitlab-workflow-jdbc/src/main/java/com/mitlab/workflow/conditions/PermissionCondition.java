@@ -10,7 +10,7 @@ public class PermissionCondition implements Condition {
 
 	@Override
 	public boolean passesCondition(Map<String, Object> inputs, Map<String, Object> args, WorkflowUser caller) {
-		return caller.hasAuthority((String) args.get("permission"));
+		return caller.hasPermission((String) args.get("permission"));
 	}
 
 }

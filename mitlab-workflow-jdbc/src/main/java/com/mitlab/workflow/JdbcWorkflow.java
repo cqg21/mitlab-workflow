@@ -533,8 +533,8 @@ public class JdbcWorkflow implements Workflow {
 		return workflowStatus;
 	}
 	
-	private static final String INSERT_CURRENT_STEP_SQL = "insert t_current_step(step_id, step_name, user_group, start_date, status, workflow_id, prev_id) values(?, ?, ?, ?, ?, ?, ?)";
-	private static final String INSERT_HISTORY_STEP_SQL = "insert t_history_step(id, step_id, step_name, user_group, caller, start_date, due_date, finish_date, status, workflow_id, action_id, prev_id) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_CURRENT_STEP_SQL = "insert into t_current_step(step_id, step_name, user_group, start_date, status, workflow_id, prev_id) values(?, ?, ?, ?, ?, ?, ?)";
+	private static final String INSERT_HISTORY_STEP_SQL = "insert into t_history_step(id, step_id, step_name, user_group, caller, start_date, due_date, finish_date, status, workflow_id, action_id, prev_id) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	private static final String GET_CURRENT_STEPS_BY_ID_SQL = "select s.id, s.step_id, s.step_name, s.user_group, s.caller, s.start_date, s.due_date, s.finish_date, s.status, s.workflow_id, s.action_id,w.workflow_name, s.prev_id from t_current_step s, t_workflow w where s.workflow_id = w.workflow_id and w.workflow_id = ? and s.step_id = ?";
 	private static final String DELETE_CURRENT_STEP_BY_ID_SQL = "delete from t_current_step where workflow_id = ? and id = ?";
 	private static final String UPDATE_WORKFLOW_STATE_SQL = "update t_workflow set workflow_status = ?, workflow_phase = ? where workflow_id = ?";
@@ -755,7 +755,7 @@ public class JdbcWorkflow implements Workflow {
 		}
 	}
 
-	private static final String INSERT_STEP_REFER_USER_SQL = "insert t_step_user_group(step_id, refer_user, refer_user_group, workflow_id) values(?, ?, ?, ?)";
+	private static final String INSERT_STEP_REFER_USER_SQL = "insert into t_step_user_group(step_id, refer_user, refer_user_group, workflow_id) values(?, ?, ?, ?)";
 	private void saveStepReferUser(Connection conn, Long workflowId, long stepId, List<UserGroup> userGroupList) throws SQLException {
 		PreparedStatement stmt = conn.prepareStatement(INSERT_STEP_REFER_USER_SQL);
 		for (UserGroup userGroup : userGroupList) {
